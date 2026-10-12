@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10101c">
+<meta name="description" content="Yofista - Share photos, short videos and discover creators.">
+<title>Yofista - Share Your World</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#10101c;color:#fff;font-family:Arial,sans-serif}
+header{padding:18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #29293b}
+.logo{font-size:27px;font-weight:900;color:#d9bd76}
+button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-weight:bold}
+.login{background:#d9bd76;color:#171321}
+main{max-width:650px;margin:auto;padding:18px}
+h1{font-size:29px;margin-bottom:8px}
+.sub{color:#aaaebf;line-height:1.5}
+.stories{display:flex;gap:15px;overflow:auto;padding:20px 0}
+.story{text-align:center;min-width:65px;font-size:12px;color:#ddd}
+.circle{width:57px;height:57px;border-radius:50%;border:3px solid #d9bd76;display:grid;place-items:center;font-size:23px;margin:auto auto 7px}
+.tabs{display:flex;gap:10px;margin:15px 0}
+.tabs button{background:#242437;color:white;flex:1}
+.tabs button.active{background:#d9bd76;color:#171321}
+.card{background:#1c1c2b;border:1px solid #303047;border-radius:16px;padding:17px;margin:14px 0}
+.creator{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.avatar{background:#35354a;border-radius:50%;width:42px;height:42px;display:grid;place-items:center}
+.media{height:180px;border-radius:12px;background:linear-gradient(135deg,#30294b,#57416b,#c69b66);display:grid;place-items:center;font-size:45px}
+.actions{display:flex;gap:12px;margin-top:14px}
+.actions button{background:#303047;color:white}
+.upload{background:#d9bd76;color:#171321;width:100%;margin-top:12px}
+footer{position:sticky;bottom:0;background:#171725;border-top:1px solid #303047;display:flex;justify-content:space-around;padding:14px 4px}
+footer button{background:transparent;color:#eee;padding:8px;font-size:12px}
+small{color:#a9a9bb}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">YOFISTA ✦</div>
+  <button class="login" onclick="showLogin()">Log in / Join</button>
+</header>
+<main>
+  <h1>Share your world.</h1>
+  <p class="sub">Photos, Reels, videos and people you love — all in one place.</p>
+  <div class="stories">
+    <div class="story"><div class="circle">＋</div>Your story</div>
+    <div class="story"><div class="circle">🎵</div>Music</div>
+    <div class="story"><div class="circle">🎬</div>Creators</div>
+    <div class="story"><div class="circle">📸</div>Photos</div>
+    <div class="story"><div class="circle">🌍</div>Explore</div>
+  </div>
+  <div class="tabs">
+    <button class="active" onclick="feed('All',this)">For you</button>
+    <button onclick="feed('Reels',this)">Reels</button>
+    <button onclick="feed('Videos',this)">Videos</button>
+  </div>
+  <div id="feed">
+    <div class="card">
+      <div class="creator"><div class="avatar">Y</div><div><b>Yofista Community</b><br><small>Welcome to a new beginning</small></div></div>
+      <div class="media">✦ YOFISTA</div>
+      <p>Your next favourite community starts here.</p>
+      <div class="actions"><button onclick="like(this)">♡ Like</button><button onclick="commentPost()">💬 Comment</button><button onclick="sharePost()">↗ Share</button></div>
+    </div>
+    <div class="card"><b>✨ Discover something new</b><p class="sub">Soon you can share your own photos and videos with the world.</p></div>
+  </div>
+  <div class="card">
+    <b>Be an early creator 🚀</b>
+    <p class="sub">Help us build Yofista. Uploads and accounts will be added in the next development steps.</p>
+    <button class="upload" onclick="showLogin()">Get started</button>
+  </div>
+</main>
+<footer>
+  <button onclick="window.scrollTo(0,0)">⌂<br>Home</button>
+  <button onclick="feed('Reels')">▶<br>Reels</button>
+  <button onclick="showLogin()">＋<br>Create</button>
+  <button onclick="showLogin()">♡<br>Activity</button>
+  <button onclick="showLogin()">◉<br>Profile</button>
+</footer>
+<script>
+function showLogin(){alert("Yofista account registration is coming soon. Real login and OTP will be connected in a later step.")}
+function feed(type,btn){
+ document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+ if(btn)btn.classList.add("active");
+ if(type==="Reels")document.getElementById("feed").innerHTML='<div class="card"><div class="media">▶ Reels coming soon</div><p>Short videos will appear here.</p></div>';
+ else if(type==="Videos")document.getElementById("feed").innerHTML='<div class="card"><div class="media">🎬 Videos coming soon</div><p>Creator videos will appear here.</p></div>';
+ else location.reload();
+}
+function like(btn){btn.textContent=btn.textContent.includes("Liked")?"♡ Like":"♥ Liked"}
+function commentPost(){alert("Comments will be added when accounts are connected.")}
+function sharePost(){if(navigator.share)navigator.share({title:"Yofista",text:"Discover Yofista"});else alert("Yofista - Share your world!")}
+</script>
+</body>
+</html>
