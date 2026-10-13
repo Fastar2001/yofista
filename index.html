@@ -3,43 +3,52 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10101c">
-<meta name="description" content="Yofista - Share photos, short videos and discover creators.">
+<meta name="description" content="Yofista - Share photos, reels and videos.">
 <title>Yofista - Share Your World</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#10101c;color:#fff;font-family:Arial,sans-serif}
-header{padding:18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #29293b}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid #303047;position:sticky;top:0;background:#10101c;z-index:5}
 .logo{font-size:27px;font-weight:900;color:#d9bd76}
-button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-weight:bold}
-.login{background:#d9bd76;color:#171321}
-main{max-width:650px;margin:auto;padding:18px}
-h1{font-size:29px;margin-bottom:8px}
-.sub{color:#aaaebf;line-height:1.5}
-.stories{display:flex;gap:15px;overflow:auto;padding:20px 0}
-.story{text-align:center;min-width:65px;font-size:12px;color:#ddd}
-.circle{width:57px;height:57px;border-radius:50%;border:3px solid #d9bd76;display:grid;place-items:center;font-size:23px;margin:auto auto 7px}
+button{cursor:pointer;border:0;border-radius:10px;padding:12px 15px;font-weight:bold}
+.gold{background:#d9bd76;color:#171321}
+.dark{background:#303047;color:#fff}
+main{max-width:700px;margin:auto;padding:18px 18px 100px}
+h1{font-size:29px}
+.sub,small{color:#aaaabe;line-height:1.5}
+.stories{display:flex;gap:15px;overflow:auto;padding:18px 0}
+.story{text-align:center;min-width:65px;font-size:12px}
+.circle{width:57px;height:57px;border-radius:50%;border:3px solid #d9bd76;display:grid;place-items:center;font-size:23px;margin:auto auto 8px}
 .tabs{display:flex;gap:10px;margin:15px 0}
-.tabs button{background:#242437;color:white;flex:1}
-.tabs button.active{background:#d9bd76;color:#171321}
-.card{background:#1c1c2b;border:1px solid #303047;border-radius:16px;padding:17px;margin:14px 0}
-.creator{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.tabs button{background:#242437;color:#fff;flex:1}
+.tabs .active{background:#d9bd76;color:#171321}
+.card{background:#1c1c2b;border:1px solid #303047;border-radius:18px;padding:16px;margin:14px 0}
+.creator{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .avatar{background:#35354a;border-radius:50%;width:42px;height:42px;display:grid;place-items:center}
-.media{height:180px;border-radius:12px;background:linear-gradient(135deg,#30294b,#57416b,#c69b66);display:grid;place-items:center;font-size:45px}
-.actions{display:flex;gap:12px;margin-top:14px}
-.actions button{background:#303047;color:white}
-.upload{background:#d9bd76;color:#171321;width:100%;margin-top:12px}
-footer{position:sticky;bottom:0;background:#171725;border-top:1px solid #303047;display:flex;justify-content:space-around;padding:14px 4px}
-footer button{background:transparent;color:#eee;padding:8px;font-size:12px}
-small{color:#a9a9bb}
+.media{height:180px;border-radius:12px;background:linear-gradient(135deg,#30294b,#57416b,#c9b696);display:grid;place-items:center;font-size:34px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.actions button{background:#303047;color:#fff}
+footer{position:fixed;bottom:0;left:0;right:0;background:#171725;border-top:1px solid #303047;display:flex;justify-content:space-around;z-index:5}
+footer button{background:transparent;color:#eee;flex:1;padding:12px 3px;font-size:12px}
+#authBox{display:none;position:fixed;inset:0;background:#000b;z-index:20;align-items:center;justify-content:center;padding:18px}
+.panel{width:100%;max-width:420px;max-height:90vh;overflow:auto;background:#1c1c2b;border:1px solid #454052;border-radius:20px;padding:22px}
+.panel h2{color:#d9bd76}
+.panel input{display:block;width:100%;padding:13px;margin:8px 0 14px;border-radius:10px;border:1px solid #454052;background:#10101c;color:white;font-size:16px}
+.panel label{font-size:14px}
+.panel form button{width:100%;margin-top:8px}
+#message{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">YOFISTA ✦</div>
-  <button class="login" onclick="showLogin()">Log in / Join</button>
+  <div id="account"><button class="gold" onclick="openAuth()">Log in / Join</button></div>
 </header>
+
 <main>
   <h1>Share your world.</h1>
   <p class="sub">Photos, Reels, videos and people you love — all in one place.</p>
@@ -50,45 +59,205 @@ small{color:#a9a9bb}
     <div class="story"><div class="circle">📸</div>Photos</div>
     <div class="story"><div class="circle">🌍</div>Explore</div>
   </div>
+
   <div class="tabs">
-    <button class="active" onclick="feed('All',this)">For you</button>
-    <button onclick="feed('Reels',this)">Reels</button>
-    <button onclick="feed('Videos',this)">Videos</button>
+    <button class="active" onclick="showFeed('For you',this)">For you</button>
+    <button onclick="showFeed('Reels',this)">Reels</button>
+    <button onclick="showFeed('Videos',this)">Videos</button>
   </div>
+
   <div id="feed">
     <div class="card">
       <div class="creator"><div class="avatar">Y</div><div><b>Yofista Community</b><br><small>Welcome to a new beginning</small></div></div>
       <div class="media">✦ YOFISTA</div>
       <p>Your next favourite community starts here.</p>
-      <div class="actions"><button onclick="like(this)">♡ Like</button><button onclick="commentPost()">💬 Comment</button><button onclick="sharePost()">↗ Share</button></div>
+      <div class="actions">
+        <button onclick="likePost(this)">♡ Like</button>
+        <button onclick="commentPost()">💬 Comment</button>
+        <button onclick="sharePost()">↗ Share</button>
+      </div>
     </div>
-    <div class="card"><b>✨ Discover something new</b><p class="sub">Soon you can share your own photos and videos with the world.</p></div>
   </div>
+
   <div class="card">
     <b>Be an early creator 🚀</b>
-    <p class="sub">Help us build Yofista. Uploads and accounts will be added in the next development steps.</p>
-    <button class="upload" onclick="showLogin()">Get started</button>
+    <p class="sub">Join Yofista and get ready to share your world.</p>
+    <button class="gold" onclick="openAuth()">Get started</button>
   </div>
 </main>
+
 <footer>
   <button onclick="window.scrollTo(0,0)">⌂<br>Home</button>
-  <button onclick="feed('Reels')">▶<br>Reels</button>
-  <button onclick="showLogin()">＋<br>Create</button>
-  <button onclick="showLogin()">♡<br>Activity</button>
-  <button onclick="showLogin()">◉<br>Profile</button>
+  <button onclick="showFeed('Reels')">▶<br>Reels</button>
+  <button onclick="openAuth()">＋<br>Create</button>
+  <button onclick="openAuth()">♡<br>Activity</button>
+  <button onclick="openAuth()">●<br>Profile</button>
 </footer>
+
+<div id="authBox">
+  <div class="panel">
+    <button class="dark" style="float:right" onclick="closeAuth()">✕</button>
+    <h2>YOFISTA ✦</h2>
+    <h3 id="formTitle">Welcome back</h3>
+    <p class="sub" id="formDescription">Log in to your account.</p>
+    <form id="authForm">
+      <div id="nameWrap" class="hidden">
+        <label for="fullName">Your name</label>
+        <input id="fullName" autocomplete="name" placeholder="Enter your name">
+      </div>
+      <label for="email">Email address</label>
+      <input id="email" type="email" required autocomplete="email" placeholder="you@example.com">
+      <label for="password">Password</label>
+      <input id="password" type="password" required minlength="6" autocomplete="current-password" placeholder="At least 6 characters">
+      <button class="gold" id="submitButton" type="submit">Log in</button>
+    </form>
+    <p id="message" role="status" aria-live="polite"></p>
+    <button class="dark" id="switchButton" onclick="switchMode()">New here? Create an account</button>
+  </div>
+</div>
+
 <script>
-function showLogin(){alert("Yofista account registration is coming soon. Real login and OTP will be connected in a later step.")}
-function feed(type,btn){
- document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
- if(btn)btn.classList.add("active");
- if(type==="Reels")document.getElementById("feed").innerHTML='<div class="card"><div class="media">▶ Reels coming soon</div><p>Short videos will appear here.</p></div>';
- else if(type==="Videos")document.getElementById("feed").innerHTML='<div class="card"><div class="media">🎬 Videos coming soon</div><p>Creator videos will appear here.</p></div>';
- else location.reload();
+const SUPABASE_URL = "https://maodvbkebhrvztevuwwd.supabase.co";
+const SUPABASE_KEY = "sb_publishable_nrrWCiZxC8oCzoeFfmUc6A_xQ-Yxd2c";
+
+let client = null;
+let signup = false;
+let user = null;
+
+if (window.supabase) {
+  client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
-function like(btn){btn.textContent=btn.textContent.includes("Liked")?"♡ Like":"♥ Liked"}
-function commentPost(){alert("Comments will be added when accounts are connected.")}
-function sharePost(){if(navigator.share)navigator.share({title:"Yofista",text:"Discover Yofista"});else alert("Yofista - Share your world!")}
+
+function openAuth(){
+  document.getElementById("authBox").style.display="flex";
+  message("");
+}
+function closeAuth(){
+  document.getElementById("authBox").style.display="none";
+}
+function message(t){
+  document.getElementById("message").textContent=t;
+}
+function switchMode(){
+  signup=!signup;
+  document.getElementById("formTitle").textContent=signup?"Create your account":"Welcome back";
+  document.getElementById("formDescription").textContent=signup?"Join the Yofista community.":"Log in to your account.";
+  document.getElementById("nameWrap").classList.toggle("hidden",!signup);
+  document.getElementById("fullName").required=signup;
+  document.getElementById("submitButton").textContent=signup?"Create account":"Log in";
+  document.getElementById("switchButton").textContent=signup?"Already registered? Log in":"New here? Create an account";
+  document.getElementById("password").autocomplete=signup?"new-password":"current-password";
+  message("");
+}
+
+document.getElementById("authForm").addEventListener("submit",async function(e){
+  e.preventDefault();
+  if(!client){message("Unable to load Supabase. Refresh the page and try again.");return;}
+
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  const fullName=document.getElementById("fullName").value.trim();
+  const btn=document.getElementById("submitButton");
+  btn.disabled=true;
+  btn.textContent="Please wait...";
+  message("");
+
+  try{
+    if(signup){
+      const r=await client.auth.signUp({
+        email,password,
+        options:{data:{full_name:fullName}}
+      });
+      if(r.error)throw r.error;
+      message(r.data.session?"Account created successfully!":"Registration submitted. Check your email for a confirmation link if required.");
+    }else{
+      const r=await client.auth.signInWithPassword({email,password});
+      if(r.error)throw r.error;
+      closeAuth();
+      message("Login successful.");
+    }
+    await refreshAccount();
+  }catch(err){
+    message(err.message||"Something went wrong. Please try again.");
+  }finally{
+    btn.disabled=false;
+    btn.textContent=signup?"Create account":"Log in";
+  }
+});
+
+async function refreshAccount(){
+  if(!client)return;
+  const r=await client.auth.getUser();
+  user=r.data.user||null;
+  const area=document.getElementById("account");
+  area.replaceChildren();
+
+  if(user){
+    const label=document.createElement("span");
+    label.style.cssText="color:#d9bd76;margin-right:8px";
+    label.textContent=user.user_metadata?.full_name||user.email;
+
+    const out=document.createElement("button");
+    out.className="gold";
+    out.textContent="Log out";
+    out.onclick=async()=>{
+      const result=await client.auth.signOut();
+      if(result.error){alert(result.error.message);return;}
+      await refreshAccount();
+    };
+    area.append(label,out);
+  }else{
+    const b=document.createElement("button");
+    b.className="gold";
+    b.textContent="Log in / Join";
+    b.onclick=openAuth;
+    area.append(b);
+  }
+}
+
+function showFeed(type,button){
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  if(button)button.classList.add("active");
+  const feed=document.getElementById("feed");
+  feed.replaceChildren();
+
+  const card=document.createElement("div");
+  card.className="card";
+  const heading=document.createElement("h3");
+  heading.textContent=type==="For you"?"Yofista Community":type;
+  const desc=document.createElement("p");
+  desc.className="sub";
+  desc.textContent=type==="For you"?"Welcome to a new beginning.":"The "+type+" feed will be connected in the next development step.";
+  card.append(heading,desc);
+
+  if(type==="For you"){
+    const media=document.createElement("div");
+    media.className="media";
+    media.textContent="✦ YOFISTA";
+    card.append(media);
+  }
+  feed.append(card);
+}
+function likePost(button){
+  if(!user){openAuth();message("Log in to like posts.");return;}
+  button.textContent=button.textContent.includes("Liked")?"♡ Like":"♥ Liked";
+}
+function commentPost(){
+  if(!user){openAuth();message("Log in to comment.");return;}
+  alert("Comments need a database feature, which we will add next.");
+}
+function sharePost(){
+  if(navigator.share){
+    navigator.share({title:"Yofista",text:"Discover Yofista",url:location.href}).catch(()=>{});
+  }else{
+    alert("Share this website: "+location.href);
+  }
+}
+
+if(client){
+  client.auth.onAuthStateChange(()=>setTimeout(refreshAccount,0));
+  refreshAccount();
+}
 </script>
 </body>
 </html>
