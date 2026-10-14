@@ -41,7 +41,7 @@ footer button span{display:block;font-size:22px;margin-bottom:4px}footer button.
 </style>
 </head>
 <body>
-<header><div class="logo">YOFISTA ✦</div><button id="authButton" class="gold" onclick="openAuth()">Log in / Join</button></header>
+<header><div class="logo">YOFISTA ✦</div><div class="row"><button class="btn" onclick="showPage('coins')">🪙 Coins</button><button id="authButton" class="gold" onclick="openAuth()">Log in / Join</button></div></header>
 <div class="wrap">
   <div id="notice" role="status"></div>
 
@@ -69,6 +69,17 @@ footer button span{display:block;font-size:22px;margin-bottom:4px}footer button.
   <section id="activityPage" class="hidden">
     <h2>Activity</h2><div class="card sub">Likes, comments, follows and notifications will appear here when notification support is connected.</div>
   </section>
+
+  <section id="coinsPage" class="hidden">
+    <div class="section-title"><h2>🪙 Yofista Coins</h2><span class="pill">Beta</span></div>
+    <div class="card" style="text-align:center;padding:26px 16px">
+      <div class="small">YOUR DEMO BALANCE</div><div id="coinBalance" style="font-size:44px;font-weight:900;color:#d9bd76;margin:10px 0">0 ✦</div>
+      <div class="sub">These are in-app demo points only. They have no cash value and cannot be withdrawn.</div>
+    </div>
+    <div class="card"><h3>🎁 Daily Reward</h3><p class="sub">Claim 10 demo coins once per day on this device.</p><button id="dailyRewardButton" class="gold full" onclick="claimDailyReward()">Claim daily reward +10</button></div>
+    <div class="card"><h3>👥 Invite friends</h3><p class="sub">Share Yofista with friends. Referral rewards will activate after secure server-side validation is connected.</p><input id="referralLink" readonly><button class="btn full" onclick="copyReferralLink()">Copy invite link</button></div>
+    <div class="card"><h3>🛡️ Future coin features</h3><p class="sub">Creator rewards, verified referrals, wallet history and any redemption option will be connected only after anti-abuse checks and server-side wallet rules are ready.</p></div>
+  </section>
 </div>
 
 <footer>
@@ -76,6 +87,7 @@ footer button span{display:block;font-size:22px;margin-bottom:4px}footer button.
   <button id="navReels" onclick="showPage('reels')"><span>▶</span>Reels</button>
   <button id="navCreate" onclick="startUpload()"><span>＋</span>Create</button>
   <button id="navActivity" onclick="showPage('activity')"><span>♡</span>Activity</button>
+  <button id="navCoins" onclick="showPage('coins')"><span>✦</span>Coins</button>
   <button id="navProfile" onclick="openProfile()"><span>◉</span>Profile</button>
 </footer>
 
@@ -113,6 +125,12 @@ const BUCKET = "yofista-media";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser=null, authModeValue="login", posts=[], currentPage="home", busy=false, localPlayCounts={};
 const $=id=>document.getElementById(id);
+const COIN_BALANCE_KEY="yofista_demo_coins_v1";
+const COIN_DAY_KEY="yofista_demo_reward_day_v1";
+function getDemoCoins(){return Number(localStorage.getItem(COIN_BALANCE_KEY)||0)}
+function updateCoinUI(){const b=$("coinBalance");if(b)b.textContent=getDemoCoins()+" ✦";const today=new Date().toLocaleDateString("en-CA");const btn=$("dailyRewardButton");if(btn){const claimed=localStorage.getItem(COIN_DAY_KEY)===today;btn.disabled=claimed;btn.textContent=claimed?"Today's reward claimed":"Claim daily reward +10"}const ref=$("referralLink");if(ref)ref.value=location.origin+location.pathname+(currentUser?"?ref="+encodeURIComponent(currentUser.id):"")}
+function claimDailyReward(){if(!currentUser){notify("Daily reward ke liye pehle login karo.");openAuth();return}const today=new Date().toLocaleDateString("en-CA");if(localStorage.getItem(COIN_DAY_KEY)===today)return notify("Aaj ka reward pehle hi claim ho chuka hai.");localStorage.setItem(COIN_BALANCE_KEY,String(getDemoCoins()+10));localStorage.setItem(COIN_DAY_KEY,today);updateCoinUI();notify("10 demo coins added! Ye balance sirf is device par hai.")}
+async function copyReferralLink(){const val=$("referralLink").value;try{await navigator.clipboard.writeText(val);notify("Invite link copied!")}catch(_){window.prompt("Copy your invite link",val)}}
 function notify(message,error=false){const el=$("notice");el.textContent=message;el.className=error?"error":"";el.style.display="block"}
 function clearNotice(){$("notice").style.display="none"}
 function esc(v=""){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -125,18 +143,20 @@ function setAuthMode(mode){authModeValue=mode;$("nameField").classList.toggle("h
 function closeCreate(){$("createBox").classList.remove("open")}
 function showPage(page){
   currentPage=page;
-  ["home","reels","profile","activity"].forEach(p=>$(p+"Page").classList.toggle("hidden",p!==page));
-  $("navHome").classList.toggle("active",page==="home");$("navReels").classList.toggle("active",page==="reels");$("navActivity").classList.toggle("active",page==="activity");$("navProfile").classList.toggle("active",page==="profile");
+  const pages={home:"homePage",reels:"reelsPage",profile:"profilePage",activity:"activityPage",coins:"coinsPage"};
+  Object.entries(pages).forEach(([key,id])=>$(id).classList.toggle("hidden",key!==page));
+  ["Home","Reels","Activity","Coins","Profile"].forEach(name=>{const btn=$("nav"+name);if(btn)btn.classList.toggle("active",name.toLowerCase()===page)});
   closeCreate();window.scrollTo({top:0,behavior:"smooth"});
-  if(page==="home")renderFeed();if(page==="reels")renderReels();if(page==="profile")renderProfile();
+  if(page==="home")renderFeed();if(page==="reels")renderReels();if(page==="profile")renderProfile();if(page==="coins")updateCoinUI();
 }
+
 function startUpload(){
   if(!currentUser){notify("Video upload karne ke liye pehle login karo.");openAuth();return}
   clearNotice();$("createBox").classList.add("open");
 }
 function openProfile(){if(!currentUser){notify("Apni profile dekhne ke liye pehle login karo.");openAuth();return}showPage("profile")}
 async function logout(){const {error}=await db.auth.signOut();if(error)return notify(error.message,true);currentUser=null;showPage("home");notify("You have logged out.")}
-function syncUI(){$("authButton").textContent=currentUser?"My account":"Log in / Join";if(currentUser){$("profileName").textContent=displayName(currentUser);$("profileEmail").textContent=currentUser.email||"";$("profileAvatar").textContent=initials(displayName(currentUser))}else if(currentPage==="profile")showPage("home")}
+function syncUI(){$("authButton").textContent=currentUser?"My account":"Log in / Join";updateCoinUI();if(currentUser){$("profileName").textContent=displayName(currentUser);$("profileEmail").textContent=currentUser.email||"";$("profileAvatar").textContent=initials(displayName(currentUser))}else if(currentPage==="profile")showPage("home")}
 $("authForm").addEventListener("submit",async e=>{
  e.preventDefault();clearNotice();const email=$("email").value.trim(),password=$("password").value,name=$("fullName").value.trim();$("authSubmit").disabled=true;
  try{
@@ -212,7 +232,7 @@ async function deletePost(id){if(!currentUser||!confirm("Delete this reel?"))ret
  await loadFeed();notify("Reel deleted.");
 }
 db.auth.onAuthStateChange((_event,session)=>{currentUser=session?.user||null;syncUI();setTimeout(()=>loadFeed(),0)});
-(async function init(){const {data}=await db.auth.getSession();currentUser=data.session?.user||null;syncUI();await loadFeed()})();
+(async function init(){const {data}=await db.auth.getSession();currentUser=data.session?.user||null;syncUI();updateCoinUI();await loadFeed()})();
 </script>
 </body>
 </html>
